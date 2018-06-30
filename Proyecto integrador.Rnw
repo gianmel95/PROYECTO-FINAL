@@ -1,0 +1,80 @@
+\documentclass{article}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage{longtable}
+\usepackage{authblk}
+\usepackage{adjustbox}
+
+\usepackage{natbib}
+
+\title{IDH EN COLOMBIA}
+% autores
+\renewcommand\Authand{, y }
+\author[1]{\normalsize Giancarlo Melani Hurtado}
+
+
+\affil[1,2]{\small  Departamento de IngenierÃ?a,Universidad de los Andes\\
+\texttt{{g.melani10}@uniandes.edu.col}}
+\affil[1]{\small Curso de verano, herramientas computacionales\\
+Uniandes\\
+
+\date{29 de Junio de 2018}
+
+%%%
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+
+\maketitle
+
+
+\begin{abstract}
+Este es un trabajo que busca generar un paper a través del uso de la herramienta Latex para le ejecución de un PDF que permita generar un archivo comprensible y amigable. Por otra parte se usa Python para realizar la limpieza de los datos que se usarán para los análisis y de R-Studio para generar el documento.
+
+\end{abstract}
+
+\section*{IntroducciÃ³n}
+
+El seguiente paper corresponde al proyecto integrador del curso herramientas computacionales en el que se tratará el tema del indice de desarrollo humano (IDH).Este es un indicador que elabora cada año Naciones Unidas. Se trata de un indicador que, a diferencia de los que se utilizaban anteriormente que medían el desarrollo económico de un país, analiza la salud, la educación y los ingresos.
+Si ordenamos los países en función de su Índice de desarrollo humano, Colombia se encuentra en el puesto 95 del ranking de desarrollo humano(IDH). El IDH, tiene en cuenta tres variables: vida larga y saludable, conocimientos y nivel de vida digno. Por lo tanto, influyen entre otros el hecho de que la esperanza de vida en Colombia esté en 74,2 años, su tasa de mortalidad en el 5,94??? y su renta per cápita sea de 5.451??? euros.
+
+Comencemos viendo que hay en la secciÃ³n \ref{univariada} en la pÃ¡gina \pageref{univariada}.
+
+\clearpage
+
+\section{ExploraciÃ³n Univariada}\label{univariada}
+
+Se denomina exploración univariada al proceso en el que se obtiene las medidas estadísticas, la tabla de frecuencias y algún gráfico de resumen de una variable en particular. Primero es necesario identificar la escala en la que está medida la variable. Una clasificación ampliamente usada es la que identifica tres tipos de variables: categóricas nominales, categóricas ordinales y numéricas o escalares. Las categóricas pueden clasificarse a su vez por la cantidad de categorías o modalidades que puedan tener: dicotómicas o politómicas. Reconocidas las variables es necesario saber qué medidas y gráficas corresponden o se pueden obtener. Una nominal no puede tener media ni mediana, solo moda. Una ordinal puede tener moda y mediana pero no media. Una numérica puede tener las tres: moda, mediana y media. A estas medidas se les reconoce como medidas representativas de la variable o medidas de centralidad.
+
+<<getData, echo=FALSE>>=
+filename="colombia.csv"
+colb=read.csv(filename, stringsAsFactors = FALSE)
+
+# que variables y tipo
+str(colb)
+
+summary(colb)
+
+## graficos
+# el plot de cada uno seria el histograma:
+
+hist(colb$IDH)
+hist(colb$PoblaciÃ³n.Cabecera)
+hist(colb$PoblaciÃ³n.Resto)
+
+# dado el sesgo de las pobaciones, 
+# podriamos transformarla para que se acerque a la 
+# normalidad
+
+colb$cabeLog=log(colb$PoblaciÃ³n.Cabecera)
+colb$restoLog=log(colb$PoblaciÃ³n.Resto)
+
+hist(colb$cabeLog)
+hist(colb$restoLog)
+
+@
+
+
+
+\end{document}

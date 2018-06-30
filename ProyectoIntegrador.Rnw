@@ -1,0 +1,217 @@
+\documentclass{article}
+
+
+\usepackage[utf8]{inputenc}
+\usepackage{longtable}
+\usepackage{authblk}
+\usepackage{adjustbox}
+
+\usepackage{natbib}
+
+\title{IDH EN COLOMBIA}
+% autores
+
+\author[1]{\normalsize Giancarlo Melani Hurtado}
+
+
+\affil[1,2]{\small  Departamento de Ingenieria,Universidad de los Andes\\
+\texttt{{g.melani10}@uniandes.edu.col}}
+\affil[1]{\small Curso de verano, herramientas computacionales\\
+Uniandes\\
+\texttt{delcurso@bp.com.col}}
+
+\date{29 de Junio de 2018}
+
+%%%
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+
+\maketitle
+
+
+\begin{abstract}
+Este es un trabajo que busca generar un paper a traves del uso de la herramienta Latex para le ejecucion de un PDF que permita generar un archivo comprensible y amigable. Por otra parte se usa Python para realizar la limpieza de los datos que se usan para los analisis y de R-Studio para generar el documento.
+
+\end{abstract}
+
+\section*{Introduccion}
+
+El seguiente paper corresponde al proyecto integrador del curso herramientas computacionales en el que se tratara el tema del indice de desarrollo humano (IDH).Este es un indicador que elabora cada ano Naciones Unidas. Se trata de un indicador que, a diferencia de los que se utilizaban anteriormente que median el desarrollo economico de un pais, analiza la salud, la educacion y los ingresos.
+Si ordenamos los paises en funcion de su indice de desarrollo humano, Colombia se encuentra en el puesto 95 del ranking de desarrollo humano(IDH). El IDH, tiene en cuenta tres variables: vida larga y saludable, conocimientos y nivel de vida digno. Por lo tanto, influyen entre otros el hecho de que la esperanza de vida en Colombia estan en 74,2 anos, su tasa de mortalidad en el 5,94 y su renta per capita sea de 5.451 euros.
+
+Comencemos viendo que hay en la sección \ref{univariada} en la página \pageref{univariada}.
+
+\clearpage
+
+\section{Exploración Univariada}\label{univariada}
+
+Se denomina exploracion univariada al proceso en el que se obtiene las medidas estadisticas, la tabla de frecuencias y algun grafico de resumen de una variable en particular. Primero es necesario identificar la escala en la que esta medida la variable. Una clasificacion ampliamente usada es la que identifica tres tipos de variables: categoricas nominales, categoricas ordinales y numericas o escalares. Las categoricas pueden clasificarse a su vez por la cantidad de categorias o modalidades que puedan tener: dicotomicas o politomicas. Reconocidas las variables es necesario saber que medidas y graficas corresponden o se pueden obtener. Una nominal no puede tener media ni mediana, solo moda. Una ordinal puede tener moda y mediana pero no media. Una numerica puede tener las tres: moda, mediana y media. A estas medidas se les reconoce como medidas representativas de la variable o medidas de centralidad.Esto lo menciona Macqueen en sus libros.\cite{macqueen_methods_nodate}
+
+
+
+<<carga,echo=FALSE>>=
+filename="colombia.csv"
+colb=read.csv(filename, stringsAsFactors = FALSE)
+@
+
+
+<<summary, results=tex, echo=FALSE>>=
+library(stargazer)
+vars1 <- colb[, c(1:5)]
+
+stargazer(vars1,title = "Medidas estadisticas", label = "stats",summary.stat = c("n", "median"))
+@
+
+Se procedio a realizar un analisis estadistico de los datos, motivo por el cual se comenzo con unos histogramas como se evidencia a continuacion:
+
+\begin{figure}[h]
+<<hist, echo=FALSE,fig=T,width=14,height=6>>=
+
+par(mfrow=c(2,2))
+hist(colb$IDH,main="Hist 1",ylab="Frecuencia",col="BLUE")
+hist(colb$PoblaciÃ³n.Cabecera,main="Hist 2",ylab="Frecuencia",col="BLUE")
+hist(colb$PoblaciÃ³n.Resto,main="Hist 3",ylab="Frecuencia",col="BLUE")
+@
+\caption{Histogramas }
+\end{figure}
+ 
+ A continuacion, se presentan los histogramas luego de realizar las transformaciones.
+
+
+\begin{figure}[h]
+<<log, echo=FALSE, fig=TRUE,width=14,height=6>>=
+
+par(mfrow=c(2,2))
+colb$cabeLog=log(colb$PoblaciÃ³n.Cabecera)
+colb$restoLog=log(colb$PoblaciÃ³n.Resto)
+hist(colb$IDH,main="Hist 1",ylab="Frecuencia",col="BLUE")
+hist(colb$cabeLog,main="Hist 1",ylab="Frecuencia",col="BLUE")
+hist(colb$restoLog,main="Hist 2",ylab="Frecuencia",col="BLUE")
+@
+\caption{Histogramas luego de la transformación}
+\end{figure}
+
+\clearpage
+
+
+\section{Exploración Bivariada}
+
+
+En este trabajo estamos interesados en el impacto de los otros indices. Veamos las relaciones bivariadas que tiene esta variable con todas las demás:
+
+<<corrDem, results=tex, echo=FALSE>>=
+explanans=names(colb)[c(7:8)]
+corrDem=cor(colb$IDH,colb[,explanans], use = "na.or.complete")
+stargazer(corrDem, title="Correlacion de IDH con las demás variables",label = "corrDem")
+@
+
+
+Veamos la correlacionn entre las variables independientes:
+
+<<corrTableX, results=tex, echo=FALSE>>=
+corrTableX=round(cor(colb[,explanans],
+               use = "na.or.complete"),2)
+corrTableX_copy=corrTableX
+# Hide upper triangle
+
+corrTableX[upper.tri(corrTableX)]<-""
+
+stargazer(corrTableX, title="Correlacion entre variables independientes",label = 'corrTableX')
+@
+
+
+
+\begin{figure}[h]
+<<grafico,echo=FALSE, fig=TRUE>>=
+library(corrplot)
+plot(colb[,explanans])
+@
+\caption{Grafico de dispersion}
+\end{figure}
+
+\clearpage
+
+
+\section{Modelos de Regresion}
+
+En estadIstica, el analisis de la regresion es un proceso estadistico para estimar las relaciones entre variables. Incluye muchas tecnicas para el modelado y analisis de diversas variables, cuando la atencion se centra en la relación entre una variable dependiente y una o mas variables independientes (o predictoras).
+
+<<regresiones, echo=FALSE>>=
+LinRegA = lm(IDH ~ ., data = colb[,c(1,7)])
+LinRegB = lm(IDH ~ ., data = colb[,c(1,7:8)])
+@
+
+<<regresionesPlot,results=tex, echo=false>>=
+stargazer(LinRegA,LinRegB,
+          title = "Modelos de Regresion", 
+          label = "regresiones")
+@
+
+\clearpage
+
+
+\section{Exploracion Espacial}
+
+La exploracion espacial designa los esfuerzos del ser humano en estudiar el espacio y sus astros desde el punto de vista cientifico y de su explotacion economica. Estos esfuerzos pueden involucrar tanto seres humanos viajando en naves espaciales como satelites con recursos de telemetria o sondas teleguiadas enviadas a otros planetas (orbitando o aterrizando en la superficie de estos cuerpos celestes). La ciencia que estudia los vuelos espaciales y la tecnologia relacionada con ellos se denomina astronautica. Las personas que pilotan naves espaciales, o son pasajeros en ellas, se llaman astronautas (en Rusia: cosmonautas; en China: taikonautas). Tecnicamente se considera astronauta a todo aquel que emprenda un vuelo suborbital (sin entrar en orbita) u orbital a como minimo 100 km de altitud (considerado el limite externo de la atmosfera).
+
+\begin{figure}[h]
+<<getMap, echo=FALSE,results=HIDE>>=
+library(rgdal)
+folder='COL_maps'
+file='COL_adm1.shp'
+mapaFile=file.path(folder,file)
+mapCol <- rgdal::readOGR(mapaFile,stringsAsFactors=F) 
+plot(mapCol)
+head(mapCol@data)
+sub_colb=colb[,c(1:2,7:8)]
+mapCol_idh=merge(mapCol,sub_colb, by.x='NAME_1', by.y='Departamento',all.x=F)
+nrow(mapCol_idh)
+names(mapCol_idh)
+@
+
+<<nj, echo=FALSE,results=HIDE>>=
+dimensions=c("NAME_1","IDH","cabeLog","restoLog")
+library(cluster)
+dataCluster=mapCol_idh@data[,c(dimensions)]
+dataCluster[,-1]=scale(dataCluster[,-1])
+
+
+
+resultado=kmeans(dataCluster[,-1],3)
+clusters=as.data.frame(resultado$cluster)
+clusters$NAME_1=dataCluster$NAME_1
+names(clusters)=c('cluster','NAME_1')
+mapCol_idh=merge(mapCol_idh,clusters, by='NAME_1',all.x=F)
+names(mapCol_idh)
+
+@
+
+
+<<plotMap1, echo=FALSE, fig=TRUE,results=HIDE>>=
+library(RColorBrewer)
+library(classInt)
+varToPLot=mapCol_idh$cluster
+numberOfClasses = length(unique(varToPLot))
+colorForScale='Set2'
+paleta = brewer.pal(numberOfClasses, colorForScale)
+plot(mapCol,col='grey',border=0)
+plot(mapCol_idh, col = paleta[varToPLot],border=F,add=T)
+legend('left', legend = c("LOW","UP","MEDIUM"),
+       fill = paleta, 
+       cex = 0.6, 
+       bty = "n",
+       title="conglomerado")
+
+@
+\caption{Mapa de Colombia por colores}
+\end{figure}
+
+\clearpage
+
+\bibliographystyle{abbrv}
+\renewcommand{\refname}{Bibliografia}
+\bibliography{PROYECTOZ}
+
+
+\end{document}
